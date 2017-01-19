@@ -103,23 +103,20 @@ int Find_largest_square_divisor (int requested_thread_count, int matrix_dim){
 
 /*------------------------------------------------------------------*/
 int main(int argc, char* argv[]) {
-    time_t     t_start;
-    time_t     t_end;
+    double     t_start;
+    double     t_end;
     long       thread;
     pthread_t* thread_handles;
     
     if (argc != 2) Usage(argv[0]);
     
-    printf("Enter matrix size n \n");
-    scanf("%d", &n);
-    
-    Initialize_matrix(&C, &n);
-    
     Lab1_loadinput(&A, &B, &n);
     
-    Print_matrix("Matrix A", A, n, n);
-    Print_matrix("Matrix B", B, n, n);
-    Print_matrix("Matrix C", C, n, n);
+    Initialize_matrix(&C, &n);
+
+    //Print_matrix("Matrix A", A, n, n);
+    //Print_matrix("Matrix B", B, n, n);
+    //Print_matrix("Matrix C", C, n, n);
     
     thread_count = Find_largest_square_divisor(atoi(argv[1]), n);
     thread_handles = malloc(thread_count*sizeof(pthread_t));
@@ -140,7 +137,7 @@ int main(int argc, char* argv[]) {
     
     printf("It took %f seconds\n", total_time);
     
-    Print_matrix("Result Matrix", C, n, n);
+    //Print_matrix("Result Matrix", C, n, n);
     
     
     Lab1_saveoutput(C, &n, total_time);
