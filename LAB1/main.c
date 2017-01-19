@@ -78,10 +78,13 @@ void Set_matrix_value(int ***M, int i, int j, int value)
 }
 
 // Added functions
+
+// Returns true if num is a square.
 bool Is_square(int num){
     return ((int) sqrt(num))*((int) sqrt(num)) == num;
 }
 
+// Returns true if numerator can be divided evenly by num.
 bool Is_divisor(int num, int numerator){
     return (numerator % num == 0);
 }
