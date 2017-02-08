@@ -1,4 +1,4 @@
-#include<stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include "timer.h"
 
-#define STRMAX 200
+#define STRMAX 64
 #define NUMTHREADS 20
 
 int array_size;
@@ -43,10 +43,10 @@ int main(int argc, char* argv[])
 		printf("\nServer Socket has been created\n");
 		listen(serverFileDescriptor,2000); 
 		while(1) {       //loop infinity... why? I think maybe... sure
-			GET_TIME(start); 
+			GET_TIME(start);
 			for(int i=0;i<NUMTHREADS;i++) {
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
-				pthread_create(&t,NULL,ServerEcho,(void *)clientFileDescriptor);
+				pthread_create(&t[i],NULL,ServerEcho,(void *)clientFileDescriptor);
 			}
 			for(int i=0;i<NUMTHREADS;i++) {
 				pthread_join(t[i], NULL);
@@ -91,7 +91,13 @@ void *ServerEcho(void *args) {
 	}
 	pthread_mutex_unlock(&mutex);
 
+	printf("SERVER: writing message to client: %s\n", str);
 	write(clientFileDescriptor,str,STRMAX);
+	
+	// char str2[STRMAX];
+	// read(clientFileDescriptor,str2,STRMAX);
+
+	// printf("SERVER: read message from client: %s\n", str2);
 	close(clientFileDescriptor);
 }
 
