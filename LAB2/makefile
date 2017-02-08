@@ -1,9 +1,16 @@
 all: 
-	gcc -Wall -o main_client main_client.c -lpthread -std=c99
-	gcc -Wall -o main_server main_server.c -lpthread -std=c99
+	gcc -Wall -o client main_client.c -lpthread -std=c99
+	gcc -Wall -o server main_server.c -lpthread -std=c99
+
+clean:
+	rm -f main_server
+	rm -f main_client
+	rm -f server
+	rm -f client
+	rm -f arrayRW
 
 run_server:
-	./main_server 3001 100
+	./server 3003 100
 
 run_client:
-	./main_client 3001 100
+	./client 3003 100

@@ -8,12 +8,22 @@
 #include <pthread.h>
 #include "timer.h"
 
-#define STRMAX 64
-#define NUMTHREADS 20
+#define STRMAX 200
+#define NUMTHREADS 1000
+
+typedef struct {
+	int readers;
+	int writer;
+	pthread_cond_t readers_proceed;
+	pthread_cond_t writer_proceed;
+	int pending_writers;
+	pthread_mutex_t read_write_lock;
+} mylib_rwlock_t;
+
 
 int array_size;
-pthread_mutex_t mutex;
 char theArray[1024][STRMAX];
+pthread_mutex_t mutex;
 
 void Usage (char* prog_name);
 void *ServerEcho(void *args);
@@ -27,6 +37,7 @@ int main(int argc, char* argv[])
 	int serverFileDescriptor=socket(AF_INET,SOCK_STREAM,0);
 	int clientFileDescriptor;
 	pthread_t t[NUMTHREADS];
+
 	pthread_mutex_init(&mutex, NULL);
 
 	if (argc != 3) Usage(argv[0]);
@@ -43,20 +54,21 @@ int main(int argc, char* argv[])
 		printf("\nServer Socket has been created\n");
 		listen(serverFileDescriptor,2000); 
 		while(1) {       //loop infinity... why? I think maybe... sure
-			GET_TIME(start);
+			// GET_TIME(start);
 			for(int i=0;i<NUMTHREADS;i++) {
 				clientFileDescriptor=accept(serverFileDescriptor,NULL,NULL);
-				pthread_create(&t[i],NULL,ServerEcho,(void *)clientFileDescriptor);
+				int err = pthread_create(&t[i],NULL,ServerEcho,(void *)clientFileDescriptor);
+				if (err) {
+					printf("Creating thread %d encountered an error. Error no. %d\n", i, err);
+				}
 			}
 			for(int i=0;i<NUMTHREADS;i++) {
-				pthread_join(t[i], NULL);
+				int err = pthread_join(t[i], NULL);
+				if (err) {
+					printf("Joining encountered an error on thread %d. Error no. %d\n", i, err);
+				}
 			}
-			GET_TIME(finish);
-
 			print_array();
-			
-			elapsed = finish - start;	
-	 		printf("The elapsed time is %e seconds\n", elapsed);
 		}
 		close(serverFileDescriptor);
 	}
@@ -82,22 +94,19 @@ void *ServerEcho(void *args) {
 	pos++;
 	int index = atoi(pos);
 
-	pthread_mutex_lock(&mutex); 
+	pthread_mutex_lock(&mutex);
 	if (str[0] == 'w') {
-		sprintf(theArray[index], "String %d has been modified by a write request", index);
-		sprintf(str, "%s", theArray[index]);
+		sprintf(str, "String %d has been modified by a write request", index); 
+		sprintf(theArray[index], "%s", str);
 	} else {
-		sprintf(str, "%s", theArray[index]);
+		sprintf(str,theArray[index],STRMAX);	
 	}
 	pthread_mutex_unlock(&mutex);
 
-	printf("SERVER: writing message to client: %s\n", str);
 	write(clientFileDescriptor,str,STRMAX);
 	
-	// char str2[STRMAX];
-	// read(clientFileDescriptor,str2,STRMAX);
+	read(clientFileDescriptor,str,STRMAX);
 
-	// printf("SERVER: read message from client: %s\n", str2);
 	close(clientFileDescriptor);
 }
 
@@ -124,4 +133,3 @@ void print_array(){
 		printf("%s\n", theArray[i]);
 	}
 }
-
