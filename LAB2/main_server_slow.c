@@ -10,6 +10,7 @@
 
 #define STRMAX 200
 #define NUMTHREADS 1000
+#define NUMMUTEXES 5
 
 typedef struct {
 	int readers;
@@ -23,7 +24,7 @@ typedef struct {
 
 int array_size;
 char theArray[1024][STRMAX];
-pthread_mutex_t mutex;
+pthread_mutex_t mutex_array[NUMMUTEXES];
 
 void Usage (char* prog_name);
 void *ServerEcho(void *args);
@@ -38,7 +39,10 @@ int main(int argc, char* argv[])
 	int clientFileDescriptor;
 	pthread_t t[NUMTHREADS];
 
-	pthread_mutex_init(&mutex, NULL);
+	for (int i = 0; i < NUMMUTEXES; i++) {
+		pthread_mutex_init(&mutex_array[i], NULL);
+	}
+
 
 	if (argc != 3) Usage(argv[0]);
 	
@@ -97,14 +101,14 @@ void *ServerEcho(void *args) {
 	pos++;
 	int index = atoi(pos);
 
-	pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&mutex_array[index % NUMMUTEXES]);
 	if (str[0] == 'w') {
 		sprintf(str, "String %d has been modified by a write request", index); 
 		sprintf(theArray[index], "%s", str);
 	} else {
 		sprintf(str,theArray[index],STRMAX);	
 	}
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&mutex_array[index % NUMMUTEXES]);
 
 	write(clientFileDescriptor,str,STRMAX);
 	
