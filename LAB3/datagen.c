@@ -84,8 +84,8 @@ int main (int argc, char* argv[]){
     MatMul(size, T, A, S);
     for (i = 0; i < size; ++i){
         temp = (double)(random() % (int)(range * DECIMAL)) / DECIMAL;
-        // if (random() % 2)
-        //     temp *= -1;
+        if (random() % 2)
+            temp *= -1;
         b[i] = temp;
     }
     /*Output the data*/
@@ -125,8 +125,8 @@ int MatGen(int n, double** S, double range){
     for (i = 0; i < n; ++i){
         for (j = 0; j < n; ++j){
             temp = (double)(random() % (int)(DECIMAL * range)) / DECIMAL;
-            // if (random() % 2)
-                // temp *= -1;
+            if (random() % 2)
+                temp *= -1;
             S[i][j] = temp;
         }
     }

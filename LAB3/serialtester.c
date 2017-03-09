@@ -1,11 +1,11 @@
-Remember to change the exit value of the wrong case to -1 !!!
+//Remember to change the exit value of the wrong case to -1 !!!
 /*
 Test the result stored in the "data_output" by a serial version of calculation
 
 -----
 Compiling:
     "Lab3IO.c" should be included and "-lm" tag is needed, like
-    > gcc serialtester.c Lab3IO.c -o serialtester -lm
+    >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,6 +77,9 @@ int main(int argc, char* argv[])
             X[k] = Au[index[k]][size] / Au[index[k]][k];
     }
 
+    PrintMat(Au, size, size);
+    PrintVec(X, size);
+    
 	/*compare the solution*/
 	error = 0;
 	Xnorm = 0;	

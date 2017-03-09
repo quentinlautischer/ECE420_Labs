@@ -17,35 +17,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include "timer.h" // For speed testing
 #include "Lab3IO.h"
+#include <omp.h>
 
-
-void Gaussian(double** A, int n);
-void Jordan();
-void CopyMatrix(double **A, double** B, int rows, int cols);
-void SwapRow(double **A, int row1, int row2, int col_size);
+void Solve(double** A, double* X, int size);
 
 /* Global variables */
 int thread_count;
 
 int size;
 double** A;
-
-double *x;
-
-// IO
-// int Lab3LoadInput(double ***A, int *size);
-// int Lab3SaveOutput(double* x, int size, double time);
-
-// double** CreateMat(int NumRow, int NumCol);
-// int DestroyMat(double** A, int NumRow);
-// int PrintMat(double** A, int NumRow, int NumCol);
-// double* CreateVec(int size);
-// int PrintVec(double* b, int size);
-// int DestroyVec(double* b);
+double* X;
+int* index;
 
 double report_timing(double start, double end) {
     GET_TIME(end);
@@ -54,14 +39,11 @@ double report_timing(double start, double end) {
     return total_time;
 }
 
-
-
-
-/*------------------------------------------------------------------*/
+/*-----------------------------------------------------------------*/
 int main(int argc, char* argv[]) {
     double     t_start = 0.0;
     double     t_end = 0.0;
-    long       thread;
+    // long       thread;
     //pthread_t* thread_handles;
     
     if (argc != 2) {
@@ -74,32 +56,28 @@ int main(int argc, char* argv[]) {
     printf("Thread Count: %i\n", thread_count);
 
     //load Matrix
-    A = CreateMat(size, size);
-    x = CreateVec(size);
     Lab3LoadInput(&A, &size);
+    X = CreateVec(size);
+    
 
-    PrintMat(A, size, size);
+    //PrintMat(A, size, size);
     
     GET_TIME(t_start);
-    
-    for (thread = 0; thread < thread_count; thread++) {
-        // pthread_create(&thread_handles[thread], NULL, Pth_mat_mat, (void*) thread);
-    }
-    
-    for (thread = 0; thread < thread_count; thread++) {
-        //pthread_join(thread_handles[thread], NULL);
-    }
-        
+
+    Solve(A, X, size);
+
     double t = report_timing(t_start, t_end);
     
-    Gaussian(A, size);
-    PrintMat(A, size, size);
+    // printf("Final A: \n");
+    // PrintMat(A, size, size);
+    // printf("Final X: \n");
+    // PrintVec(X, size);
 
     //Output Matrix
-    Lab3SaveOutput(x, size, t);
+    Lab3SaveOutput(X, size, t);
 
     //Free Memory
-    DestroyVec(x);
+    DestroyVec(X);
     DestroyMat(A, size);
     
     return 0;
@@ -113,61 +91,62 @@ int main(int argc, char* argv[]) {
  * Global in vars: 
  * Global out var: 
  */
- void *solve(void* rank) {
-     
-    //Gaussian
+ void Solve(double** A, double* X, int size) {
+    int i, j, k;
+    double temp;
+    index = malloc(size * sizeof(int));
+    for (i = 0; i < size; ++i)
+        index[i] = i;
 
-    //Barrier?
+    if (size == 1)
+        X[0] = A[0][1] / A[0][0];
+    else{
+        //Gaussian
+        //#pragma omp parallel num_threads(thread_count) default(none) shared(size, A, index) private(i, k, j, temp)
+        for (k = 0; k < size - 1; ++k){
+            /*Pivoting*/
+            temp = 0;
+            j = 0;
+            //#pragma omp parallel for num_threads(thread_count)
+            for (i = k; i < size; ++i) {
+                if (temp < A[index[i]][k] * A[index[i]][k]){
+                    temp = A[index[i]][k] * A[index[i]][k];
+                    j = i;
+                }
+            }
+            if (j != k)/*swap*/{
+                i = index[j];
+                index[j] = index[k];
+                index[k] = i;
+            }
+            /*calculating*/
+            #pragma omp critical
+            for (i = k + 1; i < size; ++i){
+                temp = A[index[i]][k] / A[index[k]][k];
+                for (j = k; j < size + 1; ++j) {
+                    A[index[i]][j] -= A[index[k]][j] * temp;
+                }
+            }       
+        }
 
-    //Jordan 
+        //Jordan
+        #pragma omp single nowait
+        {
+            for (k = size - 1; k > 0; --k){
+                for (i = k - 1; i >= 0; --i ){
+                    temp = A[index[i]][k] / A[index[k]][k];
+                    A[index[i]][k] -= temp * A[index[k]][k];
+                    A[index[i]][size] -= temp * A[index[k]][size];
+                } 
+            }
+        } 
 
-    return NULL;
+        // Solve 
+        #pragma omp barrier
+        //#pragma omp parallel for num_threads(thread_count)
+        for (k=0; k< size; ++k) {
+            X[k] = A[index[k]][size] / A[index[k]][k];
+        }
+
+    return;
  }  /* Pth_mat_mat */
-
-
-
-void Gaussian(double** A, int n) {
-    int largest_index = 0;
-    int largest_value = 0;
-
-    for (int k = 0; k < n; k++) {
-        /*Pivoting*/
-        //Search for the row which has the max value in column k.
-        for (int i = k; i < n; i++) {
-            if (A[i][k] > largest_value) {
-                largest_value = A[i][k];
-                largest_index = i;
-            }
-        }
-        // Swap the current row with the row that has the maximum value.
-        SwapRow(A, k, largest_index, n);
-
-        for (int i = k+1; i < n; i++) {
-            double temp = A[i][k]/A[k][k];
-            for (int j = k; j < n; j++) {
-                A[i][j] = A[i][j] - (temp*A[k][j]);
-            }
-        }
-    }
-}
-
-void Jordan() {
-
-}
-
-
-void CopyMatrix(double **A, double** B, int rows, int cols) {
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            B[i][j] = A[i][j];
-        }
-    }
-}
-
-void SwapRow(double **A, int row1, int row2, int col_size) {
-    for (int j = 0; j < col_size; j++) {
-        double tmp = A[row1][j];
-        A[row1][j] = A[row2][j];
-        A[row2][j] = tmp;
-    }
-}
