@@ -1,18 +1,7 @@
-/* File:
- *     main.c
- *
- * Purpose:
- *
- * Input:
- *     p: number of threads
- *
- * Output:
- *
- * Usage:
- *     main <thread_count>
- *
- * Notes:
+/* ECE 420 - LAB 3
  * 
+ * Gaussian-Jordan Elimination Serial Algorithm 
+ * Algorithm from serialtester.c
  */
 
 #include <stdio.h>
@@ -20,7 +9,6 @@
 #include <stdbool.h>
 #include "timer.h" // For speed testing
 #include "Lab3IO.h"
-#include <omp.h>
 
 void Solve(double** A, double* X, int size);
 
@@ -43,8 +31,6 @@ double report_timing(double start, double end) {
 int main(int argc, char* argv[]) {
     double     t_start = 0.0;
     double     t_end = 0.0;
-    // long       thread;
-    //pthread_t* thread_handles;
     
     if (argc != 2) {
         printf("Get your args together c'mon");
@@ -52,7 +38,6 @@ int main(int argc, char* argv[]) {
     }
     
     thread_count = atoi(argv[1]);
-    //thread_handles = malloc(thread_count*sizeof(pthread_t));
     printf("Thread Count: %i\n", thread_count);
 
     //load Matrix
@@ -102,12 +87,10 @@ int main(int argc, char* argv[]) {
         X[0] = A[0][1] / A[0][0];
     else{
         //Gaussian
-        //#pragma omp parallel num_threads(thread_count) default(none) shared(size, A, index) private(i, k, j, temp)
         for (k = 0; k < size - 1; ++k){
             /*Pivoting*/
             temp = 0;
             j = 0;
-            //#pragma omp parallel for num_threads(thread_count)
             for (i = k; i < size; ++i) {
                 if (temp < A[index[i]][k] * A[index[i]][k]){
                     temp = A[index[i]][k] * A[index[i]][k];
@@ -120,7 +103,6 @@ int main(int argc, char* argv[]) {
                 index[k] = i;
             }
             /*calculating*/
-            #pragma omp critical
             for (i = k + 1; i < size; ++i){
                 temp = A[index[i]][k] / A[index[k]][k];
                 for (j = k; j < size + 1; ++j) {
@@ -130,8 +112,7 @@ int main(int argc, char* argv[]) {
         }
 
         //Jordan
-        #pragma omp single nowait
-        {
+        
             for (k = size - 1; k > 0; --k){
                 for (i = k - 1; i >= 0; --i ){
                     temp = A[index[i]][k] / A[index[k]][k];
@@ -139,14 +120,13 @@ int main(int argc, char* argv[]) {
                     A[index[i]][size] -= temp * A[index[k]][size];
                 } 
             }
-        } 
+        
 
         // Solve 
-        #pragma omp barrier
-        //#pragma omp parallel for num_threads(thread_count)
         for (k=0; k< size; ++k) {
             X[k] = A[index[k]][size] / A[index[k]][k];
         }
 
     return;
+    }
  }  /* Pth_mat_mat */

@@ -1,5 +1,6 @@
 all: 
 	gcc -Wall -o main main.c Lab3IO.c -fopenmp -std=c99
+	gcc -Wall -o main_omp main_omp.c Lab3IO.c -fopenmp -std=c99
 	gcc serialtester.c Lab3IO.c -o serialtester -lm
 	gcc datagen.c Lab3IO.c -o datagen
 	gcc test_program.c -o test_program -fopenmp -std=c99

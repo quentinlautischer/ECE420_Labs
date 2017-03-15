@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 #include "timer.h" // For speed testing
 #include <omp.h>
 
@@ -19,9 +20,9 @@ int main(int argc, char* argv[]) {
     GET_TIME(t_start);
 
 
-    #pragma omp parallel for num_threads(400)
-    for (int i = 0; i < 2000000; i++) {
-    	A[i] = i;
+    #pragma omp parallel for num_threads(8)
+    for (int i = 0; i < 20; i++) {
+    	sleep(1);
     }
 
 

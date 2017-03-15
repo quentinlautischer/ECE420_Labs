@@ -77,8 +77,8 @@ int main(int argc, char* argv[])
             X[k] = Au[index[k]][size] / Au[index[k]][k];
     }
 
-    PrintMat(Au, size, size);
-    PrintVec(X, size);
+    // PrintMat(Au, size, size);
+    // PrintVec(X, size);
     
 	/*compare the solution*/
 	error = 0;

@@ -1,5 +1,4 @@
-#Lab2 - ECE 420
-
+#Lab3 - ECE 420
 
 To run:
 
@@ -8,8 +7,8 @@ In a terminal
 Compile command:
 > make all
 
-Start server:
-> make run_server
+Serial Solver:
+> ./main 1
 
-Start client:
-> make run_client 
+OMP Solver:
+> ./main_omp <thread_count>
