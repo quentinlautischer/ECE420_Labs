@@ -9,7 +9,7 @@ run_serial:
 	./main_serial
 
 run:
-	mpirun -np 4 ./main
+	mpirun -np 8 ./main
 
 clean:
 	rm -f datatrim

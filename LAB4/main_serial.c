@@ -77,11 +77,6 @@ int main(int argc, char* argv[]) {
     
     int i, j;
     double damp_const;
-    int iterationcount = 0;
-    int collected_nodecount;
-    double *collected_r;
-    double cst_addapted_threshold;
-    double error;
 
 
     R = malloc(nodecount * sizeof(double));
@@ -93,7 +88,6 @@ int main(int argc, char* argv[]) {
 
 
     do{
-        ++iterationcount;
         vec_cp(R, r_pre, nodecount);
         for ( i = 0; i < nodecount; ++i){
             R[i] = 0;
