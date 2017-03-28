@@ -15,6 +15,8 @@
 
 #define THRESHOLD 0.0001
 
+#define MAX_STRING 250
+
 void Solve();
 
 /* Global variables */
@@ -22,6 +24,7 @@ int thread_count;
 
 struct node *nodehead;
 int nodecount;
+int npes;
 int *in_links;
 int *out_links;
 double *R, *r_pre;
@@ -36,7 +39,7 @@ double report_timing(double start, double end, int rank) {
 /*-----------------------------------------------------------------*/
 int main(int argc, char* argv[]) {
 
-    int npes, myrank;
+    int myrank;
     double     t_start = 0.0;
     double     t_end = 0.0;
 
@@ -94,8 +97,10 @@ int main(int argc, char* argv[]) {
     double cst_addapted_threshold;
     double error;
 
-    double *localR;
+    double *localR, *localr_pre;
     int nodes_per_proc = nodecount/npes;
+
+    int workMore = 1;  /* String storing message */
 
     R = malloc(nodecount * sizeof(double));
     r_pre = malloc(nodecount * sizeof(double));
@@ -137,47 +142,66 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Scatter(R, nodes_per_proc, MPI_DOUBLE, localR, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    vec_cp(localR, localr_pre, nodes_per_proc);
+    MPI_Scatter(r_pre, nodes_per_proc, MPI_DOUBLE, localr_pre, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     for ( i = 0; i < nodes_per_proc; i++){
         localR[i] = 0;
         for ( j = 0; j < nodehead[i].num_in_links; j++)
-            localR[i] += localr_pre[nodehead[i].inlinks[j]] / out_links[nodehead[i].inlinks[j]];
+            localR[i] += localr_pre[(nodehead[i].inlinks[j]/nodes_per_proc)*(rank+1)] / out_links[nodehead[i].inlinks[j]];
         localR[i] *= DAMPING_FACTOR;
         localR[i] += damp_const;
     }
     MPI_Gather(localR, nodes_per_proc, MPI_DOUBLE, R, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
 
+    printf("First done\n");
+
     if (rank == 0) {
         while (rel_error(R, r_pre, nodecount) >= EPSILON) {
+            printf("about to send more work (main guy)\n");
             //sendmsg more work to do
             vec_cp(R, r_pre, nodecount);
-
+            workMore = 1;
+            MPI_Bcast(&workMore, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            
+            printf("I finished sending my bcast\n");
             MPI_Scatter(R, nodes_per_proc, MPI_DOUBLE, localR, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            vec_cp(localR, localr_pre, nodes_per_proc);
+            MPI_Scatter(r_pre, nodes_per_proc, MPI_DOUBLE, localr_pre, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            printf("about to enter for-loop in rank0 after gathering: %d\n", rank);
             for ( i = 0; i < nodes_per_proc; i++){
                 localR[i] = 0;
                 for ( j = 0; j < nodehead[i].num_in_links; j++)
+                    //printf(nodehead[i].inlinks[j]);
                     localR[i] += localr_pre[nodehead[i].inlinks[j]] / out_links[nodehead[i].inlinks[j]];
                 localR[i] *= DAMPING_FACTOR;
                 localR[i] += damp_const;
             }
+            printf("Main guy about to gather\n");
             MPI_Gather(localR, nodes_per_proc, MPI_DOUBLE, R, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            printf("Main guy finished gathering\n");
         }
-        //sendmsg no more work 
+        //sendmsg no more work
+        workMore = 0;
+        MPI_Bcast(&workMore, 1, MPI_INT, 0, MPI_COMM_WORLD);
         return;
     } else {
-        while(recmsg more work to do) {
+        printf("about to rec\n");
+        MPI_Bcast(&workMore, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        printf("message received: %d\n", workMore);
+        while(workMore) {
+            printf("Subsid %d starting work\n", rank);
             MPI_Scatter(R, nodes_per_proc, MPI_DOUBLE, localR, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            vec_cp(localR, localr_pre, nodes_per_proc);
+            MPI_Scatter(r_pre, nodes_per_proc, MPI_DOUBLE, localr_pre, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
             for ( i = 0; i < nodes_per_proc; i++){
                 localR[i] = 0;
                 for ( j = 0; j < nodehead[i].num_in_links; j++)
-                    localR[i] += localr_pre[nodehead[i].inlinks[j]] / out_links[nodehead[i].inlinks[j]];
+                    localR[i] += localr_pre[(nodehead[i].inlinks[j]/nodes_per_proc)*(rank+1)] / out_links[nodehead[i].inlinks[j]];
                 localR[i] *= DAMPING_FACTOR;
                 localR[i] += damp_const;
             }
             MPI_Gather(localR, nodes_per_proc, MPI_DOUBLE, R, nodes_per_proc, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            printf("Subsid %d finished work\n", rank);
+            MPI_Bcast(&workMore, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            printf("Subsid %d received bcast: %d\n", rank, workMore);
         }   
     }
 
