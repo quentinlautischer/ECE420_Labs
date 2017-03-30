@@ -1,0 +1,11 @@
+Read me for ECE420 Lab1 Script Kit
+January 19, 2017
+
+COMPILE INSTRUCTIONS:
+gcc -g -Wall -o main main.c lab1_IO.c -lpthread -lm
+
+EXECUTION INSTRUCTIONS:
+./main <insert threads>
+
+
+

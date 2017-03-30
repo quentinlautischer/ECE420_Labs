@@ -1,0 +1,13 @@
+Identified Gaussian is the time consumer
+
+Identified Calc is the time consumer
+
+y? 3 level nested for loop
+  for 
+    for 
+      for
+
+Guassian cut down from 1.5secs to .5 secs
+
+Jordan cut down from ~0.012 ~0.0045
+
