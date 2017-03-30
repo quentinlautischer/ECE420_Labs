@@ -1,3 +1,0 @@
-OMP Website with a bunch of #pragmas and examples:
-http://bisqwit.iki.fi/story/howto/openmp/
-
