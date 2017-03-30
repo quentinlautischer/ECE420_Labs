@@ -7,8 +7,14 @@ In a terminal
 Compile command:
 > make all
 
-Serial Solver:
-> ./main 1
+To run the MPI version:
+> make run
 
-OMP Solver:
-> ./main_omp <thread_count>
+To run the serial version:
+> make run_serial
+
+To cleanup the files:
+> make clean
+
+
+
