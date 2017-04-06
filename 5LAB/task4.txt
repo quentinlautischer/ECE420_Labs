@@ -1,0 +1,46 @@
+import scala.io.Source
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Map
+import scala.collection.mutable.Set
+
+val Nodes:Map[String,Set[String]] = Map()
+
+val filename = "data_input"
+for (line <- Source.fromFile(filename).getLines()) {
+	val nodes: Array[String] = line.split("\t")
+
+	// If Left side is already in the Map Nodes
+	if (Nodes.contains(nodes(0))) {
+		//Get the Set of Neighbours
+		val node_neighbours: Set[String] = Nodes.get(nodes(0)).getOrElse(Set[String]())
+
+		//Add Right side to Neighbours
+		node_neighbours += nodes(1)
+
+	} else {
+		// Add Left side to Nodes with its mapped set of 1 neighbour
+		Nodes += (nodes(0) -> Set(nodes(1)))
+	}
+
+}
+
+//Nodes.foreach(node => println(node + "\n"))
+val result: ArrayBuffer[List[String]] = ArrayBuffer()
+
+
+
+for (node <- Nodes.keys) {
+	val neighbours: Set[String] = Nodes.get(node).getOrElse(Set[String]())
+	for (neighbour <- neighbours) {
+		result += List[String](node, neighbour)
+
+		val nested_neighbours: Set[String] = Nodes.get(neighbour).getOrElse(Set[String]())
+		for (nested_neighbour <- nested_neighbours) {
+			result += List[String](node, nested_neighbour)
+		}
+	}
+}
+
+for (r <- result) {
+	println(r(0) + " " + r(1))
+}

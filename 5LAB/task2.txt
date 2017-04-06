@@ -1,0 +1,42 @@
+import scala.io.Source
+import scala.collection.mutable.Map
+import scala.collection.mutable.Set
+
+val Nodes:Map[String,Set[String]] = Map()
+
+val filename = "data_input"
+for (line <- Source.fromFile(filename).getLines()) {
+	val nodes: Array[String] = line.split("\t")
+
+	// If Left side is already in the Map Nodes
+	if (Nodes.contains(nodes(0))) {
+		//Get the Set of Neighbours
+		val node_neighbours: Set[String] = Nodes.get(nodes(0)).getOrElse(Set[String]())
+
+		//Add Right side to Neighbours
+		node_neighbours += nodes(1)
+
+	} else {
+		// Add Left side to Nodes with its mapped set of 1 neighbour
+		Nodes += (nodes(0) -> Set(nodes(1)))
+	}
+
+	// If Right side is already in the Map Nodes
+	if (Nodes.contains(nodes(1))) {
+		//Get the Set of Neighbours
+		val node_neighbours: Set[String] = Nodes.get(nodes(1)).getOrElse(Set[String]())
+
+		//Add Right side to Neighbours
+		node_neighbours += nodes(0)
+
+	} else {
+		// Add Left side to Nodes with its mapped set of 1 neighbour
+		Nodes += (nodes(1) -> Set(nodes(0)))
+	}
+}
+
+//Nodes.foreach(node => println(node + "\n"))
+var result: Map[String,Set[String]] = Nodes
+
+result.keys.foreach(r => println(r + " " + Nodes.get(r).getOrElse(0)))
+

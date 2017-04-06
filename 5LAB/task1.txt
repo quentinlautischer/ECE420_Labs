@@ -1,0 +1,23 @@
+import scala.io.Source
+import scala.collection.mutable.Map
+
+val Inlinks:Map[String,Int] = Map()
+
+val filename = "data_input"
+for (line <- Source.fromFile(filename).getLines()) {
+	val nodes: Array[String] = line.split("\t")
+	if (Inlinks.contains(nodes(1))) {
+		val current_inlinks: Int = Inlinks.get(nodes(1)).getOrElse(0)
+		Inlinks(nodes(1)) = current_inlinks + 1
+		//println(Inlinks.get(nodes(1)).getOrElse(0))
+	} else {
+		Inlinks += (nodes(1) -> 1)
+	}
+}
+
+var result: Int = 0
+// get max value and store in "result"
+Inlinks.values.foreach(inlink => if (inlink > result) {result = inlink})
+println("Max Value of Inlinks (result): " + result)
+
+	
